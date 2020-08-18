@@ -32,5 +32,8 @@
     <ClInclude Include="include\UWP\DumperIPC.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\UWP\AtomicQueue.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

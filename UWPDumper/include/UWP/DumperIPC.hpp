@@ -1,5 +1,9 @@
 #pragma once
 
+#include <array>
+#include <atomic>
+#include <thread>
+#include <cstdarg>
 #include <cstdint>
 #include <cstddef>
 #include <string>
@@ -10,22 +14,46 @@
 #define IPC_API __declspec(dllimport)
 #endif
 
-/// Exports
 namespace IPC
 {
-IPC_API void SetClientProcess(std::uint32_t ProcessID);
-IPC_API std::uint32_t GetClientProcess();
-IPC_API void SetTargetProcess(std::uint32_t ProcessID);
-IPC_API std::uint32_t GetTargetProcess();
+	/************************************************************************************************************************************************
+	*  TYPES
+	*********************************************************************************************************************************************** */
 
-constexpr std::int32_t InvalidThread = -1;
+	struct MessageEntry
+	{
+		static constexpr std::size_t StringSize = 1024;
+		wchar_t String[StringSize];
 
-IPC_API void SetTargetThread(std::int32_t ThreadID);
-IPC_API std::int32_t GetTargetThread();
-IPC_API void ClearTargetThread();
+		MessageEntry() : String(L"")
+		{
 
-// String messaging
-IPC_API void PushMessage(const wchar_t* Format, ...);
-IPC_API std::wstring PopMessage();
-IPC_API std::size_t MessageCount();
+		}
+
+		explicit MessageEntry(const wchar_t* String)
+		{
+			wcscpy_s(this->String, MessageEntry::StringSize, String);
+		}
+
+		~MessageEntry() = default;
+	};
+
+	/************************************************************************************************************************************************
+	*  PROTOTYPES
+	************************************************************************************************************************************************ */
+
+	void IPC_API SetClientProcess(std::uint32_t ProcessID);
+	std::uint32_t IPC_API GetClientProcess();
+	void IPC_API SetTargetProcess(std::uint32_t ProcessID);
+	std::uint32_t IPC_API GetTargetProcess();
+
+	constexpr std::int32_t InvalidThread = -1;
+
+	void IPC_API SetTargetThread(std::int32_t ThreadID);
+	std::int32_t IPC_API GetTargetThread();
+	void IPC_API ClearTargetThread();
+
+	void IPC_API PushMessage(const wchar_t* Format, ...);
+	std::wstring IPC_API PopMessage();
+	std::size_t IPC_API MessageCount();
 }

@@ -13,8 +13,8 @@
 #include <queue>
 #include <filesystem>
 
-#include <UWP/UWP.hpp>
-#include <UWP/DumperIPC.hpp>
+#include "UWP/UWP.hpp"
+#include "UWP/DumperIPC.hpp"
 
 namespace fs = std::filesystem;
 
@@ -68,12 +68,9 @@ std::uint32_t __stdcall DumperThread(void* DLLHandle)
 			{
 				const std::string ErrorMessage(ErrorCode.message());
 				std::wstring WErrorMessage;
+
 				WErrorMessage.assign(ErrorMessage.begin(), ErrorMessage.end());
-				IPC::PushMessage(
-					L"Error creating subfolder: %s\n\t%s\n",
-					WritePath.parent_path().c_str(),
-					WErrorMessage.c_str()
-				);
+				IPC::PushMessage(L"Error creating subfolder: %s\n\t%s\n", WritePath.parent_path().c_str(), WErrorMessage.c_str());
 				continue;
 			}
 
@@ -90,10 +87,7 @@ std::uint32_t __stdcall DumperThread(void* DLLHandle)
 			std::ofstream DestFile(WritePath, std::ios::binary);
 			if (!DestFile.is_open())
 			{
-				IPC::PushMessage(
-					L"Error opening %s for writing\n",
-					WritePath.c_str()
-				);
+				IPC::PushMessage(L"Error opening %s for writing\n", WritePath.c_str());
 				continue;
 			}
 
@@ -115,53 +109,44 @@ std::uint32_t __stdcall DumperThread(void* DLLHandle)
 		}
 		catch (std::exception& Exception)
 		{
-			//std::wstring ExceptionMessage = std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t>{}.from_bytes( Exception.what() );
-
-			IPC::PushMessage(
-				L"Exception {%s}:\n"
-				"\t[%s]\n",
-				File.path().c_str(),
-				Exception.what()
-			);
+			IPC::PushMessage(L"Exception {%s}:\n""\t[%s]\n", File.path().c_str(), Exception.what());
 		}
 	}
 
 	IPC::PushMessage(L"Dump complete!\n\tPath:\n\t%s\n", DumpPath.c_str());
 	IPC::ClearTargetThread();
 
-	FreeLibraryAndExitThread(
-		reinterpret_cast<HMODULE>(DLLHandle),
-		EXIT_SUCCESS
-	);
+	FreeLibraryAndExitThread(reinterpret_cast<HMODULE>(DLLHandle), EXIT_SUCCESS);
 }
 
 std::int32_t __stdcall DllMain(HINSTANCE hDLL, std::uint32_t Reason, void* Reserved)
 {
 	switch (Reason)
 	{
-	case DLL_PROCESS_ATTACH:
-	{
-		IPC::PushMessage(L"DLL Attached to process %u\n", GetCurrentProcessId());
-		if (IPC::GetTargetProcess() == GetCurrentProcessId())
+		case DLL_PROCESS_ATTACH:
 		{
-			IPC::PushMessage(L"Creating dumper thread%u\n");
-			CreateThread(
-				nullptr,
-				0,
-				reinterpret_cast<unsigned long(__stdcall*)(void*)>(&DumperThread),
-				hDLL,
-				0,
-				nullptr
-			);
+			IPC::PushMessage(L"DLL Attached to process %u\n", GetCurrentProcessId());
+
+			if (IPC::GetTargetProcess() == GetCurrentProcessId())
+			{
+				CreateThread(
+					nullptr,
+					0,
+					reinterpret_cast<unsigned long(__stdcall*)(void*)>(&DumperThread),
+					hDLL,
+					0,
+					nullptr
+				);
+			}
 		}
-	}
-	case DLL_PROCESS_DETACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	default:
-	{
-		return true;
-	}
+
+		case DLL_PROCESS_DETACH:
+		case DLL_THREAD_ATTACH:
+		case DLL_THREAD_DETACH:
+		default:
+		{
+			return true;
+		}
 	}
 
 	return false;

@@ -151,6 +151,7 @@
     <ClCompile Include="source\UWP\UWP.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\UWP\AtomicQueue.hpp" />
     <ClInclude Include="include\UWP\DumperIPC.hpp" />
     <ClInclude Include="include\UWP\UWP.hpp" />
   </ItemGroup>

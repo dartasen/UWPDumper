@@ -1,23 +1,22 @@
 #include "Injector/Injector.hpp"
 
-const wchar_t* DLLFile = L"UWPDumper.dll";
-
-
+const wchar_t* DLLFILE = L"UWPDumper.dll";
+const wchar_t* ACCESS_STRING = L"S-1-15-2-1";
 
 int main(int argc, char** argv, char** envp)
 {
 	std::uint32_t ProcessID = 0;
-	std::string Path;
 
 	if (argc > 1)
 	{
-		for (std::size_t i = 1; i < argc; ++i)
+		for (auto i = 1; i < argc; ++i)
 		{
 			if (std::string_view(argv[i]) == "--pid")
 			{
 				if (i != argc)
 				{
 					ProcessID = (std::uint32_t)atoi(argv[i + 1]);
+					std::cout << "[PID] USING CUSTOM PID : " << std::to_string(ProcessID) << std::endl;
 				}
 				else
 				{
@@ -30,7 +29,19 @@ int main(int argc, char** argv, char** envp)
 			{
 				if (i != argc)
 				{
-					Path = std::string(argv[i + 1]);
+					std::string Path = std::string(argv[i + 1]);
+
+
+					if (true)
+					{
+						std::cout << "[PATH] USING CUSTOM PATH : " << Path << std::endl;
+					}
+					else
+					{
+						std::cerr << "[PATH] CUSTOM PATH ISN'T VALID " << std::endl;
+						system("pause");
+						return EXIT_FAILURE;
+					}
 				}
 				else
 				{
@@ -44,6 +55,7 @@ int main(int argc, char** argv, char** envp)
 
 	SetupConsole();
 
+	std::wcout << "\033[95m\033(0" << std::wstring(80, 'q') << "\033(B" << std::endl;
 	std::wcout << "\033[92mUWPInjector Build date (" << __DATE__ << " : " << __TIME__ << ')' << std::endl;
 	std::wcout << "\033[95m\033(0" << std::wstring(80, 'q') << "\033(B" << std::endl;
 
@@ -56,12 +68,12 @@ int main(int argc, char** argv, char** envp)
 		std::cin >> ProcessID;
 	}
 
-	SetAccessControl(GetRunningDirectory() + L'\\' + DLLFile, L"S-1-15-2-1");
+	SetAccessControl(GetRunningDirectory() + L'\\' + DLLFILE, ACCESS_STRING);
 
 	IPC::SetTargetProcess(ProcessID);
 
 	std::cout << "\033[93mInjecting into remote process: ";
-	if (!DLLInjectRemote(ProcessID, GetRunningDirectory() + L'\\' + DLLFile))
+	if (!DLLInjectRemote(ProcessID, GetRunningDirectory() + L'\\' + DLLFILE))
 	{
 		std::cout << "\033[91mFailed" << std::endl;
 		system("pause");
@@ -174,7 +186,7 @@ bool DLLInjectRemote(uint32_t ProcessID, const std::wstring& DLLpath)
 		return false;
 	}
 
-	SetAccessControl(DLLpath, L"S-1-15-2-1");
+	SetAccessControl(DLLpath, ACCESS_STRING);
 
 	void* ProcLoadLibrary = reinterpret_cast<void*>(GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW"));
 
